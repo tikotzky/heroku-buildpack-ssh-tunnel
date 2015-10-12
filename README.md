@@ -3,7 +3,7 @@ This is a Heroku buildpack that adds autossh to your heroku build.
 
 autossh is a program to start a copy of ssh and monitor it, restarting
 it as necessary should it die or stop passing traffic.
-More information about autossh can be found here: 
+More information about autossh can be found here:
 http://www.harding.motd.ca/autossh/
 
 ## Usage
@@ -29,7 +29,7 @@ $ git push heroku master
 ```
 
 When the build is complete you will be able to use autossh. It can be tested by doing the following:
- 
+
 ```
 $ heroku run bash
 $ autossh
@@ -113,53 +113,23 @@ Initialization of a SSH tunnel will require that you have the SSH keys that will
 Add the keys to heroku as ENV variables:
 
 ```
-$ heroku config:set HEROKU_PUBLIC_KEY="`cat path/to/public/key`"
-$ heroku config:set HEROKU_PRIVATE_KEY="`cat path/to/private/key`"
+$ heroku config:set SSH_PUBLIC_KEY="`cat path/to/public/key`"
+$ heroku config:set SSH_PRIVATE_KEY="`cat path/to/private/key`"
 ```
 
 Great! Now we have the necessary keys in place. Time to setup the tunnel.
 
 ### Setup SSH tunnel
 
-Create a directory in your project root called '.profile.d'. In that directory we can place any number of shell scripts.
-Heroku, during startup, starts a bash shell that runs scripts in the .profile.d/ directory before executing the dyno’s command.
+To setup a SSH tunnel, you just need to set a `$SSH_TUNNELS` ENV
+variable with the details about the tunnel.
 
-More info about Heroku's .profile.d scripts can be found here: https://devcenter.heroku.com/articles/profiled
-
-For our SSH tunnelling purposes, create a file called `ssh-setup.sh` in directory just created.
+e.g:
 
 ```
-# .profile.d/ssh-setup.sh
-
-mkdir -p ${HOME}/.ssh
-chmod 700 ${HOME}/.ssh
-
-# Copy public key env variable into a file
-echo "${HEROKU_PUBLIC_KEY}" > ${HOME}/.ssh/id_rsa.pub
-chmod 644 ${HOME}/.ssh/id_rsa.pub
-
-# Copy private key env variable into a file
-echo "${HEROKU_PRIVATE_KEY}" > ${HOME}/.ssh/id_rsa
-chmod 600 ${HOME}/.ssh/id_rsa
-
-# Auto add the host to known_hosts
-# This is to avoid the authenticity of host question that otherwise will halt autossh from setting up the tunnel.
-#
-# Ex:
-# The authenticity of host '[hostname] ([IP address])' can't be established.
-# RSA key fingerprint is [fingerprint].
-# Are you sure you want to continue connecting (yes/no)?
-
-ssh-keyscan example.com >> ${HOME}/.ssh/known_hosts
-
-# Setup SSH Tunnel
-# This is an example of forwarding local port 3306 to the remote servers port 3306 (usually mysql)
-#
-# autossh will monitor port 3306. If the connection dies autossh will automatically set up a new one.
-# ServerAliveInterval: Number of seconds between sending a packet to the server (to keep the connection alive).
-# ClientAliveCountMax: Number of above ServerAlive packets before closing the connection. Autossh will create a new connection when this happens.
-
-autossh -M 3306 -f -N -o "ServerAliveInterval 10" -o "ServerAliveCountMax 3"  -L 3306:localhost:3306 user@example.com
+$ herou config:set SSH_TUNNELS="user@ssh-server:ssh-port|127.0.0.1:local-port:target-host:remote-port"
 ```
 
-There you have it. Push your project up to Heroku and now you have a reliable SSH tunnel to a service of your choice hosted remotely.
+If you want to set more than one tunnel, you can just add more
+declarations to `$SSH_TUNNELS` separating the values with commas.
+
