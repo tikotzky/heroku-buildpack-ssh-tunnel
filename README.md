@@ -1,5 +1,5 @@
-# Heroku buildpack for autossh
-This is a Heroku buildpack that adds autossh to your heroku build.
+# Heroku buildpack to setup ssh tunnels
+This is a Heroku buildpack that adds autossh to your heroku build and uses it to start an ssh tunnel from your dyno.
 
 autossh is a program to start a copy of ssh and monitor it, restarting
 it as necessary should it die or stop passing traffic.
@@ -9,7 +9,7 @@ http://www.harding.motd.ca/autossh/
 ## Usage
 
 ```
-$ heroku create --buildpack https://github.com/kollegorna/heroku-buildpack-autossh
+$ heroku create --buildpack https://github.com/quinde/heroku-buildpack-ssh-tunnel
 
 $ git push heroku master
 ...
